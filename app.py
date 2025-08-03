@@ -5,7 +5,8 @@ import glob
 import pandas as pd
 
 def get_columns(ds):
-    with open('data/retail_db/schemas.json') as fp:
+    schemas_file_path = os.environ.setdefault('SCHEMA_FILE_PATH','data/retail_db/schemas.json')
+    with open(schemas_file_path) as fp:
         schemas =   json.load(fp)
         #print(schemas)
     try:
@@ -19,14 +20,18 @@ def get_columns(ds):
     except KeyError:
         print(f'SCHEMA nOT FOUND FOR {ds}')
         return         
-def main():        
-    for path in glob.glob('data/retail_db/*'):
+    
+    
+def main():      
+    src_base_dir = os.environ.get('SRC_BASE_DIR') 
+    tgt_base_dir = os.environ.get('TGT_BASE_DIR')  
+    for path in glob.glob(f'{src_base_dir}/*'):
         if os.path.isdir(path):
             ds = os.path.split(path)[1]
             for file in glob.glob(f'{path}/part*'):
                 df =pd.read_csv(file,names = get_columns(ds))
-                os.makedirs(f'data/retail_demo/{ds}',exist_ok=True)
-                df.to_json(f'data/retail_demo/{ds}/part-{str(uuid.uuid1())}.json',orient = 'records',lines=True)
+                os.makedirs(f'{tgt_base_dir}/{ds}',exist_ok=True)
+                df.to_json(f'{tgt_base_dir}/{ds}/part-{str(uuid.uuid1())}.json',orient = 'records',lines=True)
                 print(f'Num of records Processed for {os.path.split(file)[1]} in {ds} is {df.shape}')
 
 
